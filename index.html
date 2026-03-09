@@ -1,0 +1,366 @@
+<?php
+// Konfigurasi database
+$host = 'localhost';
+$user = 'root';      // Ganti dengan user MySQL Anda
+$password = '';      // Ganti dengan password MySQL Anda
+$database = 'samp_admin_panel';
+
+// Membuat koneksi
+$conn = new mysqli($host, $user, $password, $database);
+
+// Cek koneksi
+if ($conn->connect_error) {
+    die("Koneksi gagal: " . $conn->connect_error);
+}
+
+// Proses form tambah pemain
+if (isset($_POST['tambah'])) {
+    $kode = $_POST['kode'];
+    $nama = $_POST['nama'];
+    
+    $sql = "INSERT INTO players (player_code, player_name) VALUES ('$kode', '$nama')";
+    if ($conn->query($sql) === TRUE) {
+        echo "<script>alert('Pemain berhasil ditambahkan!'); window.location.href='index.php';</script>";
+    } else {
+        echo "Error: " . $sql . "<br>" . $conn->error;
+    }
+}
+
+// Proses form ban pemain
+if (isset($_POST['ban'])) {
+    $kode = $_POST['kode'];
+    $alasan = $_POST['alasan'];
+    $tgl_unban = $_POST['tgl_unban'];
+    
+    $sql = "UPDATE players SET status='banned', ban_reason='$alasan', unban_date='$tgl_unban' WHERE player_code='$kode'";
+    if ($conn->query($sql) === TRUE) {
+        echo "<script>alert('Pemain berhasil di-ban!'); window.location.href='index.php';</script>";
+    } else {
+        echo "Error: " . $sql . "<br>" . $conn->error;
+    }
+}
+
+// Proses form hapus permanen
+if (isset($_POST['hapus'])) {
+    $kode = $_POST['kode'];
+    
+    $sql = "DELETE FROM players WHERE player_code='$kode'";
+    if ($conn->query($sql) === TRUE) {
+        echo "<script>alert('Pemain berhasil dihapus permanen!'); window.location.href='index.php';</script>";
+    } else {
+        echo "Error: " . $sql . "<br>" . $conn->error;
+    }
+}
+
+// Ambil data pemain untuk ditampilkan di tabel
+$result = $conn->query("SELECT * FROM players ORDER BY id DESC");
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel SA-MP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        /* Style untuk credit */
+        .credit {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            font-style: italic;
+            padding: 5px 10px;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .credit span {
+            color: #00ffff;
+            font-weight: bold;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        h2 {
+            color: #fff;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #00ffff;
+            padding-bottom: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .card h3 {
+            color: #00ffff;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #ccc;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .btn {
+            background: #00ffff;
+            color: #1e1e2f;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: #00cccc;
+            box-shadow: 0 0 15px #00ffff;
+        }
+
+        .btn-danger {
+            background: #ff4444;
+        }
+
+        .btn-danger:hover {
+            background: #cc0000;
+            box-shadow: 0 0 15px #ff4444;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            color: #fff;
+        }
+
+        th {
+            background: rgba(0, 255, 255, 0.2);
+            color: #00ffff;
+            font-weight: bold;
+        }
+
+        td {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-active {
+            color: #00ff00;
+        }
+
+        .status-banned {
+            color: #ff4444;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .credit {
+                position: static;
+                text-align: center;
+                margin-bottom: 15px;
+                display: inline-block;
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Credit di pojok kanan atas -->
+        <div class="credit">
+            Created By <span>Remon</span>
+        </div>
+        
+        <h1>PANEL ADMIN SA-MP</h1>
+        
+        <h2>Laporan</h2>
+        
+        <div class="grid">
+            <!-- TAMBAH PEMAIN -->
+            <div class="card">
+                <h3>TAMBAH PEMAIN</h3>
+                <form method="POST">
+                    <div class="form-group">
+                        <label>Kode Pemain</label>
+                        <input type="text" name="kode" placeholder="Contoh: P001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Pemain</label>
+                        <input type="text" name="nama" placeholder="Contoh: John_Doe" required>
+                    </div>
+                    <button type="submit" name="tambah" class="btn">DAFTARKAN</button>
+                </form>
+            </div>
+
+            <!-- BAN PEMAIN -->
+            <div class="card">
+                <h3>BAN PEMAIN</h3>
+                <form method="POST">
+                    <div class="form-group">
+                        <label>Kode Pemain</label>
+                        <input type="text" name="kode" placeholder="Masukkan kode pemain" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Alasan Ban</label>
+                        <textarea rows="2" name="alasan" placeholder="Alasan pemblokiran" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Tgl Unban (YYYY-MM-DD)</label>
+                        <input type="text" name="tgl_unban" placeholder="2025-12-31" required>
+                    </div>
+                    <button type="submit" name="ban" class="btn btn-danger">BAN</button>
+                </form>
+            </div>
+
+            <!-- HAPUS PERMANEN (UNWL) -->
+            <div class="card">
+                <h3>HAPUS PERMANEN (UNWL)</h3>
+                <form method="POST">
+                    <div class="form-group">
+                        <label>Kode Pemain</label>
+                        <input type="text" name="kode" placeholder="Masukkan kode pemain" required>
+                    </div>
+                    <button type="submit" name="hapus" class="btn btn-danger">HAPUS</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- DAFTAR PEMAIN -->
+        <h2>DAFTAR PEMAIN</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Kode</th>
+                    <th>Nama</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($result->num_rows > 0): ?>
+                    <?php while($row = $result->fetch_assoc()): ?>
+                        <tr>
+                            <td><?php echo $row['id']; ?></td>
+                            <td><?php echo $row['player_code']; ?></td>
+                            <td><?php echo $row['player_name']; ?></td>
+                            <td class="<?php echo $row['status'] == 'active' ? 'status-active' : 'status-banned'; ?>">
+                                <?php echo $row['status'] == 'active' ? 'Aktif' : 'Banned'; ?>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="4" class="no-data">Belum ada pemain!</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+<?php $conn->close(); ?>
